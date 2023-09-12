@@ -69,7 +69,7 @@ def chat(message, history):
     model_response =call_gpt_model(rag_from_bing, message)
     return model_response
 
-# Get location 
+
 # Gets the ip address of the request (user)
 def get_ip():
     response = requests.get('https://api64.ipify.org?format=json').json()
@@ -88,6 +88,7 @@ def get_location():
     return location_data
 
 
+# UI components (using Gradio - https://gradio.app)
 chatbot = gr.Chatbot(bubble_full_width = False)
 chat_interface = gr.ChatInterface(fn=chat, 
 #                 title="Title here", 
