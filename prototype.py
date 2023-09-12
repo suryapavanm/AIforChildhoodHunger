@@ -1,4 +1,5 @@
 import gradio as gr
+import requests
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import (
     PromptTemplate,
@@ -53,11 +54,14 @@ def call_gpt_model(rag_from_bing, message):
 
 def chat(message, history):
 
-    # Get location and pass it to Bing call below
-    # TODO
+    # Get location
+    location = get_location()
+    print("Location")
+    print(location)
 
     # Get information from trusted sources
     # TODO
+    # TODO - use the location above to get localized info for that location
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
     # Call Bing to get context
@@ -70,6 +74,25 @@ def chat(message, history):
     return model_response
 
 
+# Gets the ip address of the request (user)
+def get_ip():
+    response = requests.get('https://api64.ipify.org?format=json').json()
+    return response["ip"]
+
+# Fetches the location of the user based on the ip address
+def get_location():
+    ip_address = get_ip()
+    response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+    location_data = {
+        "ip": ip_address,
+        "city": response.get("city"),
+        "region": response.get("region"),
+        "country": response.get("country_name")
+    }
+    return location_data
+
+
+# UI components (using Gradio - https://gradio.app)
 chatbot = gr.Chatbot(bubble_full_width = False)
 chat_interface = gr.ChatInterface(fn=chat, 
 #                 title="Title here", 
