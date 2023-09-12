@@ -8,12 +8,15 @@ from langchain.prompts import (
     AIMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+import bingsearch
 
 # Constants for calling the Azure OpenAI service
 openai_api_type = "azure"
 gpt_endpoint = "https://TODO.openai.azure.com/"            # Your endpoint will look something like this: https://YOUR_AOAI_RESOURCE_NAME.openai.azure.com/
-gpt_api_key = "TODO"                                       # Your key will look something like this: 00000000000000000000000000000000
-gpt_deployment_name="gpt-35-turbo"
+gpt_api_key = "<OpenAI Key>"                               # Your key will look something like this: 00000000000000000000000000000000
+gpt_deployment_name="gpt-35-turbo-16k"
+bing_endpoint = "https://api.bing.microsoft.com/v7.0/search"
+bing_api_key = "<Bing Key>"
 
 # Create instance to call GPT model
 gpt = AzureChatOpenAI(
@@ -62,9 +65,10 @@ def chat(message, history):
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
     # Call Bing to get context
-    # TODO - Bing logic here - set rag_from_bing variable to Bing response rather than the hardcoded below.  
-    rag_from_bing = "To determine your eligibility for WIC in Michigan, you can use the online prescreening tool available at the Michigan Department of Health and Human Services website. The tool will ask you a series of questions related to your household size, income, and other factors to determine if you may be eligible for WIC benefits. You can access the tool here: https://www.michigan.gov/mdhhs/0,5885,7-339-71551_2945_42592---,00.html"
-
+    query =  "Determine eligibility for SNAP - Supplemental Nutrition Assistance Program(Food Stamps), WIC- Women, Infants and Children, SFSP and SSO (summer food services for kids)"
+    bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
+    # rag_from_bing = "To determine your eligibility for WIC in Michigan, you can use the online prescreening tool available at the Michigan Department of Health and Human Services website. The tool will ask you a series of questions related to your household size, income, and other factors to determine if you may be eligible for WIC benefits. You can access the tool here: https://www.michigan.gov/mdhhs/0,5885,7-339-71551_2945_42592---,00.html"
+    rag_from_bing = bing_response;
     # Call GPT model with context from Bing
     model_response =call_gpt_model(rag_from_bing, message)
     return model_response
