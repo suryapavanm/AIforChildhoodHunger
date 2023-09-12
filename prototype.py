@@ -65,10 +65,11 @@ def chat(message, history):
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
     # Call Bing to get context
-    query =  "Determine eligibility for SNAP - Supplemental Nutrition Assistance Program(Food Stamps), WIC- Women, Infants and Children, SFSP and SSO (summer food services for kids)"
+    query =  "If I live in " + location["city"] + ", " + location["region"] + ", am I eligibile for SNAP - Supplemental Nutrition Assistance Program (Food Stamps), WIC - Women, Infants and Children, SFSP and SSO (summer food services for kids)?"
+    print(query)
     bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
-    # rag_from_bing = "To determine your eligibility for WIC in Michigan, you can use the online prescreening tool available at the Michigan Department of Health and Human Services website. The tool will ask you a series of questions related to your household size, income, and other factors to determine if you may be eligible for WIC benefits. You can access the tool here: https://www.michigan.gov/mdhhs/0,5885,7-339-71551_2945_42592---,00.html"
-    rag_from_bing = bing_response;
+    rag_from_bing = bing_response
+    
     # Call GPT model with context from Bing
     model_response =call_gpt_model(rag_from_bing, message)
     return model_response
