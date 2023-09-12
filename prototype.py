@@ -11,11 +11,11 @@ import bingsearch
 
 # Constants for calling the Azure OpenAI service
 openai_api_type = "azure"
-gpt_endpoint = ""            # Your endpoint will look something like this: https://YOUR_AOAI_RESOURCE_NAME.openai.azure.com/
-gpt_api_key = ""                  # Your key will look something like this: 00000000000000000000000000000000
+gpt_endpoint = "https://TODO.openai.azure.com/"            # Your endpoint will look something like this: https://YOUR_AOAI_RESOURCE_NAME.openai.azure.com/
+gpt_api_key = "<OpenAI Key>"                               # Your key will look something like this: 00000000000000000000000000000000
 gpt_deployment_name="gpt-35-turbo-16k"
 bing_endpoint = "https://api.bing.microsoft.com/v7.0/search"
-bing_api_key = ""
+bing_api_key = "<Bing Key>"
 
 # Create instance to call GPT model
 gpt = AzureChatOpenAI(
