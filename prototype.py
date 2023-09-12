@@ -51,6 +51,20 @@ def call_gpt_model(rag_from_bing, message):
     print(output)
     return output.content
 
+def scrape(url):
+    # Send a GET request to the URL
+    response = requests.get(url)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Print the HTML content of the response
+        print(response.text)
+        # TODO: consider stripping html tags or any extra tokens?  
+        return response.text
+    else:
+        # Print an error message
+        print(f"Request failed with status code {response.status_code}")
+
 
 def chat(message, history):
 
@@ -58,6 +72,9 @@ def chat(message, history):
     location = get_location()
     print("Location")
     print(location)
+
+    # TODO: table storage logic here
+    # TODO: use scrape function above to get content
 
     # Get information from trusted sources
     # TODO
