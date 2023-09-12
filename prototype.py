@@ -51,8 +51,14 @@ def call_gpt_model(rag_from_bing, message):
 
 def chat(message, history):
 
+    # Get location
+    location = get_location()
+    print("Location")
+    print(location)
+
     # Get information from trusted sources
     # TODO
+    # TODO - use the location above to get localized info for that location
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
     # Call Bing to get context
@@ -80,7 +86,7 @@ def get_location():
         "country": response.get("country_name")
     }
     return location_data
-print(get_location())
+
 
 chatbot = gr.Chatbot(bubble_full_width = False)
 chat_interface = gr.ChatInterface(fn=chat, 
