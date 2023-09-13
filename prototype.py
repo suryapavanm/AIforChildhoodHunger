@@ -9,6 +9,11 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 import bingsearch
+from langchain.chains.question_answering import load_qa_chain
+from langchain.document_loaders import TextLoader, WebBaseLoader
+from langchain.prompts import PromptTemplate
+from langchain.llms import AzureOpenAI
+from translate import Translator
 
 # Constants for calling the Azure OpenAI service
 openai_api_type = "azure"
@@ -51,7 +56,40 @@ def call_gpt_model(rag_from_bing, message):
     print(output)
     return output.content
 
-def scrape(url):
+def call_langchain_model(rag_from_bing, docs, message):
+    qa_template = """Context information is below.
+        ---------------------
+        {context}
+        ---------------------
+        There is also some latest data about eligibility below.
+        ---------------------
+        {rag_from_bing}
+        ---------------------
+        Given the context about eligibility criteria for WIC, can you please 
+        answer the question: {question}
+        Answer should be in the format : Yes/no followed by the reason
+    """
+    PROMPT = PromptTemplate(
+        template=qa_template, input_variables=["context", "question","rag_from_bing"]
+    )
+    llm = AzureOpenAI(deployment_name='xyz', 
+                        openai_api_version="2022-12-01",
+                        model_name='xyz', 
+                        temperature=0,
+                        openai_api_key='xyz',
+                        openai_api_base='xyz')
+
+    chain = load_qa_chain(llm, chain_type="stuff", prompt=PROMPT)
+    query = message
+    result = chain({"input_documents": docs, "question": query, "rag_from_bing": rag_from_bing}, return_only_outputs=True)
+    return result
+
+def scrape(urls):
+    loader = WebBaseLoader(urls)
+    docs = loader.load()
+    return docs
+
+    '''
     # Send a GET request to the URL
     response = requests.get(url)
 
@@ -65,6 +103,7 @@ def scrape(url):
         # Print an error message
         print(f"Request failed with status code {response.status_code}")
 
+    '''
 
 def chat(message, history):
 
@@ -81,11 +120,18 @@ def chat(message, history):
     # TODO - use the location above to get localized info for that location
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
-    # Call Bing to get context
-    query =  "If I live in " + location["city"] + ", " + location["region"] + ", am I eligibile for SNAP - Supplemental Nutrition Assistance Program (Food Stamps), WIC - Women, Infants and Children, SFSP and SSO (summer food services for kids)?"
-    print(query)
+# Call Bing to get context
     bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
     rag_from_bing = bing_response
+
+    urls = ["https://www.snapscreener.com/wic/alabama",
+    "https://www.alabamapublichealth.gov/wic/"]
+    docs = scrape(urls)
+    gov_docs_langchain_response = call_langchain_model(rag_from_bing, docs, message)
+    print(gov_docs_langchain_response)
+    
+    query =  "If I live in " + location["city"] + ", " + location["region"] + ", am I eligibile for SNAP - Supplemental Nutrition Assistance Program (Food Stamps), WIC - Women, Infants and Children, SFSP and SSO (summer food services for kids)?"
+    print(query)
     
     # Call GPT model with context from Bing
     model_response =call_gpt_model(rag_from_bing, message)
@@ -109,6 +155,17 @@ def get_location():
     }
     return location_data
 
+def translate_to_spanish(input_text):
+    try:
+        translator= Translator(to_lang="es")
+        spanish_text = translator.translate(input_text)
+        return spanish_text
+    except Exception as e:
+        return str(e)
+    # Example usage:
+    #input_text = "Hello, how are you?"
+    #spanish_text = translate_to_spanish(input_text)
+    #print(spanish_text)
 
 # UI components (using Gradio - https://gradio.app)
 chatbot = gr.Chatbot(bubble_full_width = False)
