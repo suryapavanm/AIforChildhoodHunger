@@ -69,12 +69,11 @@ def call_langchain_model(rag_from_bing, docs, user_ask):
     PROMPT = PromptTemplate(
         template=qa_template, input_variables=["context", "question"]
     )
-    llm = AzureOpenAI(deployment_name='xyz', 
+    llm = AzureOpenAI(deployment_name=gpt_deployment_name, 
                         openai_api_version="2022-12-01",
-                        model_name='xyz', 
                         temperature=0,
-                        openai_api_key='xyz',
-                        openai_api_base='xyz')
+                        openai_api_key=gpt_api_key,
+                        openai_api_base=gpt_endpoint)
 
     chain = load_qa_chain(llm, chain_type="stuff", prompt=PROMPT)
     result = chain({"input_documents": docs, "question": user_ask}, return_only_outputs=True)
@@ -127,7 +126,7 @@ def chat(message, history):
     # TODO - use the location above to get localized info for that location
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
-# Call Bing to get context
+    # Call Bing to get context
     #bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
     #rag_from_bing = bing_response
 
