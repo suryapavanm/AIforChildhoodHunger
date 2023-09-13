@@ -18,6 +18,7 @@ from langchain.document_loaders import TextLoader, WebBaseLoader
 from langchain.prompts import PromptTemplate
 from langchain.llms import AzureOpenAI
 from translate import Translator
+from azure.cosmosdb.table.tableservice import TableService
 
 # Constants for calling the Azure OpenAI service
 openai_api_type = "azure"
@@ -26,6 +27,11 @@ gpt_api_key = "<OpenAI Key>"                               # Your key will look 
 gpt_deployment_name="gpt-35-turbo-16k"
 bing_endpoint = "https://api.bing.microsoft.com/v7.0/search"
 bing_api_key = "<Bing Key>"
+
+# Constants for calling Azure Table Storage
+CONNECTION_STRING = "connection string here"
+SOURCE_TABLE = "stateeligibility"
+
 
 # Create instance to call GPT model
 gpt = AzureChatOpenAI(
@@ -110,30 +116,33 @@ def chat(message, history):
 
     # Table storage logic here
     state = location["region"]
+    # TODO: We need error handling here to ensure that state is in the right format "Michigan" not "MI" etc.  Get from dropdown?
+    print("State")
     print(state)
     fq = "PartitionKey eq 'State'"
-    ts = set_table_service()
+    ts = get_table_service()
     df = get_dataframe_from_table_storage_table(table_service=ts, filter_query=fq)
     
     filteredList = df[df["RowKey"] == state]
-    print((filteredList['EligibilityWebsite']).to_string(index=False))
-    print((filteredList['SNAPScreener']).to_string(index=False))
+    print("Filtered List:")
+    print(filteredList)
+    eligibility_website = (filteredList['EligibilityWebsite']).to_string(index=False)
+    print(eligibility_website)
+    snap_screener = (filteredList['SnapScreener']).to_string(index=False)
+    print(snap_screener)
 
-    # TODO: use scrape function above to get content
-
-    # Get information from trusted sources
-    # TODO
-    # TODO - use the location above to get localized info for that location
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
     # Call Bing to get context
     #bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
     #rag_from_bing = bing_response
-
     rag_from_bing = ""
 
+    # Get information from trusted sources
     urls = ["https://www.snapscreener.com/wic/alabama",
     "https://www.alabamapublichealth.gov/wic/"]
+    # TODO: test this integration.  Are we pulling all resources or missing some columns?  Do we need better error checking for null values?  etc.
+    #urls = [eligibility_website, snap_screener]
     docs = scrape(urls)
     gov_docs_langchain_response = call_langchain_model(rag_from_bing, docs, message)
     
@@ -163,12 +172,8 @@ def get_location():
     }
     return location_data
 
-table_service = TableService(connection_string='connection string here')
-from azure.cosmosdb.table.tableservice import TableService
-
-CONNECTION_STRING = "connection string here"
-SOURCE_TABLE = "table name here"
-def set_table_service():
+# Azure Table Storage logic
+def get_table_service():
 # """ Set the Azure Table Storage service """
     return TableService(connection_string=CONNECTION_STRING)
 
