@@ -61,16 +61,12 @@ def call_langchain_model(rag_from_bing, docs, message):
         ---------------------
         {context}
         ---------------------
-        There is also some latest data about eligibility below.
-        ---------------------
-        {rag_from_bing}
-        ---------------------
         Given the context about eligibility criteria for WIC, can you please 
         answer the question: {question}
         Answer should be in the format : Yes/no followed by the reason
     """
     PROMPT = PromptTemplate(
-        template=qa_template, input_variables=["context", "question","rag_from_bing"]
+        template=qa_template, input_variables=["context", "question"]
     )
     llm = AzureOpenAI(deployment_name='xyz', 
                         openai_api_version="2022-12-01",
@@ -81,7 +77,7 @@ def call_langchain_model(rag_from_bing, docs, message):
 
     chain = load_qa_chain(llm, chain_type="stuff", prompt=PROMPT)
     query = message
-    result = chain({"input_documents": docs, "question": query, "rag_from_bing": rag_from_bing}, return_only_outputs=True)
+    result = chain({"input_documents": docs, "question": query}, return_only_outputs=True)
     return result
 
 def scrape(urls):
