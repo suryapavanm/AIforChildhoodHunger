@@ -56,14 +56,11 @@ def call_gpt_model(rag_from_bing, message):
     print(output)
     return output.content
 
-def call_langchain_model(rag_from_bing, docs, message):
-    qa_template = """Context information is below.
-        ---------------------
-        {context}
-        ---------------------
-        Given the context about eligibility criteria for WIC, can you please 
-        answer the question: {question}
-        Answer should be in the format : Yes/no followed by the reason
+def call_langchain_model(rag_from_bing, docs, user_ask):
+    qa_template = """
+        Given the context {context}, 
+        question: {question}
+        answer:
     """
     PROMPT = PromptTemplate(
         template=qa_template, input_variables=["context", "question"]
@@ -76,13 +73,14 @@ def call_langchain_model(rag_from_bing, docs, message):
                         openai_api_base='xyz')
 
     chain = load_qa_chain(llm, chain_type="stuff", prompt=PROMPT)
-    query = message
-    result = chain({"input_documents": docs, "question": query}, return_only_outputs=True)
-    return result
+    result = chain({"input_documents": docs, "question": user_ask}, return_only_outputs=True)
+    print(result)
+    return result["output_text"]
 
 def scrape(urls):
     loader = WebBaseLoader(urls)
     docs = loader.load()
+    print(docs)
     return docs
 
     '''
@@ -117,21 +115,23 @@ def chat(message, history):
     # TODO - do we need logic here to see if we have sufficient trusted source data, or whether we even need to call Bing?  
 
 # Call Bing to get context
-    bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
-    rag_from_bing = bing_response
+    #bing_response = bingsearch.call_search_api(query, bing_endpoint, bing_api_key)
+    #rag_from_bing = bing_response
+
+    rag_from_bing = ""
 
     urls = ["https://www.snapscreener.com/wic/alabama",
     "https://www.alabamapublichealth.gov/wic/"]
     docs = scrape(urls)
     gov_docs_langchain_response = call_langchain_model(rag_from_bing, docs, message)
-    print(gov_docs_langchain_response)
     
-    query =  "If I live in " + location["city"] + ", " + location["region"] + ", am I eligibile for SNAP - Supplemental Nutrition Assistance Program (Food Stamps), WIC - Women, Infants and Children, SFSP and SSO (summer food services for kids)?"
-    print(query)
+    #query =  "If I live in " + location["city"] + ", " + location["region"] + ", am I eligibile for SNAP - Supplemental Nutrition Assistance Program (Food Stamps), WIC - Women, Infants and Children, SFSP and SSO (summer food services for kids)?"
+    #print(query)
     
     # Call GPT model with context from Bing
-    model_response =call_gpt_model(rag_from_bing, message)
-    return model_response
+    #model_response =call_gpt_model(rag_from_bing, message)
+    #return model_response
+    return gov_docs_langchain_response
 
 
 # Gets the ip address of the request (user)
