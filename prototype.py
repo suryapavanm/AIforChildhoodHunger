@@ -80,11 +80,11 @@ def chat(message, history):
     # Table storage logic here
     state = location["region"]
     print(state)
-    fq = "PartitionKey eq" + "'" + state + "'"
+    fq = "PartitionKey eq 'State'"
     ts = set_table_service()
     df = get_dataframe_from_table_storage_table(table_service=ts, filter_query=fq)
     
-    filteredList = df[df["PartitionKey"] == state]
+    filteredList = df[df["RowKey"] == state]
     print((filteredList['EligibilityWebsite']).to_string(index=False))
     print((filteredList['SNAPScreener']).to_string(index=False))
 
