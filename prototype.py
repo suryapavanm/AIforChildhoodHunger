@@ -9,6 +9,10 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 import bingsearch
+from sys import displayhook
+from azure.cosmosdb.table.tableservice import TableService
+from azure.cosmosdb.table.models import Entity
+import pandas as pd
 from langchain.chains.question_answering import load_qa_chain
 from langchain.document_loaders import TextLoader, WebBaseLoader
 from langchain.prompts import PromptTemplate
@@ -105,7 +109,17 @@ def chat(message, history):
     print("Location")
     print(location)
 
-    # TODO: table storage logic here
+    # Table storage logic here
+    state = location["region"]
+    print(state)
+    fq = "PartitionKey eq 'State'"
+    ts = set_table_service()
+    df = get_dataframe_from_table_storage_table(table_service=ts, filter_query=fq)
+    
+    filteredList = df[df["RowKey"] == state]
+    print((filteredList['EligibilityWebsite']).to_string(index=False))
+    print((filteredList['SNAPScreener']).to_string(index=False))
+
     # TODO: use scrape function above to get content
 
     # Get information from trusted sources
@@ -149,6 +163,24 @@ def get_location():
         "country": response.get("country_name")
     }
     return location_data
+
+table_service = TableService(connection_string='connection string here')
+from azure.cosmosdb.table.tableservice import TableService
+
+CONNECTION_STRING = "connection string here"
+SOURCE_TABLE = "table name here"
+def set_table_service():
+# """ Set the Azure Table Storage service """
+    return TableService(connection_string=CONNECTION_STRING)
+
+def get_dataframe_from_table_storage_table(table_service, filter_query):
+    # Create a dataframe from table storage data
+    return pd.DataFrame(get_data_from_table_storage_table(table_service, filter_query))
+
+def get_data_from_table_storage_table(table_service, filter_query):
+    # Retrieve data from Table Storage
+    for record in table_service.query_entities(SOURCE_TABLE):
+        yield record
 
 def translate_to_spanish(input_text):
     try:
