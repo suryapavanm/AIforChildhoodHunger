@@ -9,6 +9,10 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
 )
 import bingsearch
+from sys import displayhook
+from azure.cosmosdb.table.tableservice import TableService
+from azure.cosmosdb.table.models import Entity
+import pandas as pd
 
 # Constants for calling the Azure OpenAI service
 openai_api_type = "azure"
@@ -73,7 +77,17 @@ def chat(message, history):
     print("Location")
     print(location)
 
-    # TODO: table storage logic here
+    # Table storage logic here
+    state = location["region"]
+    print(state)
+    fq = "PartitionKey eq" + "'" + state + "'"
+    ts = set_table_service()
+    df = get_dataframe_from_table_storage_table(table_service=ts, filter_query=fq)
+    
+    filteredList = df[df["PartitionKey"] == state]
+    print((filteredList['EligibilityWebsite']).to_string(index=False))
+    print((filteredList['SNAPScreener']).to_string(index=False))
+
     # TODO: use scrape function above to get content
 
     # Get information from trusted sources
@@ -109,6 +123,23 @@ def get_location():
     }
     return location_data
 
+table_service = TableService(connection_string='connection string here')
+from azure.cosmosdb.table.tableservice import TableService
+
+CONNECTION_STRING = "connection string here"
+SOURCE_TABLE = "table name here"
+def set_table_service():
+# """ Set the Azure Table Storage service """
+    return TableService(connection_string=CONNECTION_STRING)
+
+def get_dataframe_from_table_storage_table(table_service, filter_query):
+    # Create a dataframe from table storage data
+    return pd.DataFrame(get_data_from_table_storage_table(table_service, filter_query))
+
+def get_data_from_table_storage_table(table_service, filter_query):
+    # Retrieve data from Table Storage
+    for record in table_service.query_entities(SOURCE_TABLE):
+        yield record
 
 # UI components (using Gradio - https://gradio.app)
 chatbot = gr.Chatbot(bubble_full_width = False)
