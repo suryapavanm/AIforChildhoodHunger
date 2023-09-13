@@ -80,7 +80,6 @@ def call_langchain_model(rag_from_bing, docs, user_ask):
 def scrape(urls):
     loader = WebBaseLoader(urls)
     docs = loader.load()
-    print(docs)
     return docs
 
     '''
